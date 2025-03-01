@@ -1,0 +1,20 @@
+---
+- name: install windows applications
+  hosts: windows
+  tasks:
+    - name: install chocolatey
+      win_chocolatey:
+        name: chocolatey
+        state: present
+      become: yes
+      become_user: Administrator@rune.local
+
+    - name: Install Firefox, 7zip, and Notepad
+      win_chocolatey:
+        name:
+        - firefox
+        - 7zip
+        - notepadplusplus
+        state: present
+      become: yes
+      become_user: Administrator@rune.local

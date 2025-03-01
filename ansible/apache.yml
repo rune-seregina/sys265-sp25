@@ -1,0 +1,12 @@
+---
+- hosts: apache
+  become: true
+  roles:
+  - role: allanroque.deploy_apache_server
+
+  tasks:
+  - name: add firewall port http
+    firewalld:
+      port: 80/tcp
+      permanent: true
+      state: enabled

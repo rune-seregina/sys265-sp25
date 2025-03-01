@@ -1,0 +1,14 @@
+[apache]
+ansible01-rune
+[webmin]
+ansible02-rune
+[windows]
+mgmt01-rune
+wks01-rune
+[windows:vars]
+ansible_connection=ssh
+ansible_shell_type=powershell
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+ansible_become=yes
+ansible_become_method=runas
+ansible_become_user=Administrator@rune.local
