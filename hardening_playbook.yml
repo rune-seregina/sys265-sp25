@@ -1,0 +1,96 @@
+---
+- name: Comprehensive System Hardening Playbook
+  hosts: all
+  gather_facts: yes
+  tasks:
+    # Time Synchronization Enforcement
+    - name: Configure NTP on Rocky hosts
+      ansible.builtin.yum:
+        name: chrony
+        state: present
+      tags: rocky
+      when: ansible_os_family == "Rocky"
+      ignore_errors: yes
+      register: ntp_install
+      changed_when: ntp_install.changed
+
+    - name: Force Windows time service running
+      win_service:
+        name: w32time
+        start_mode: auto
+        state: started
+      tags: windows
+      ignore_errors: yes
+      register: time_service
+      changed_when: time_service.changed
+
+    # Firewall Baseline Rules
+    - name: Configure Windows firewall to block SMB inbound
+      win_firewall_rule:
+        name: "Block SMB inbound"
+        localport: 445
+        action: block
+        direction: in
+        protocol: tcp
+      tags: windows
+      ignore_errors: yes
+      register: firewall_rule
+      changed_when: firewall_rule.changed
+
+    - name: Open SSH only for management subnet on Rocky hosts
+      ansible.posix.firewalld:
+        service: ssh
+        permanent: true
+        state: enabled
+        immediate: true
+        zone: internal
+      tags: rocky
+      ignore_errors: yes
+      register: ssh_firewall
+      changed_when: ssh_firewall.changed
+
+    # Password Complexity Requirements
+    - name: Set password policy for Windows hosts
+      win_policy:
+        key: "System\\CurrentControlSet\\Services\\Netlogon\\Parameters"
+        value_name: PasswordComplexity
+        data: 1
+        type: dword
+      tags: windows
+      ignore_errors: yes
+      register: password_policy
+      changed_when: password_policy.changed
+
+    # SSH Hardening
+    - name: Set SSH crypto policies on Rocky hosts
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^Ciphers"
+        line: "Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com"
+      tags: rocky
+      ignore_errors: yes
+      register: ssh_crypto
+      changed_when: ssh_crypto.changed
+
+    # DNS Configuration Validation
+    - name: Verify DNS settings on Windows hosts
+      win_dns_client:
+        adapter_names: "*"
+        dns_servers: "10.0.5.5"
+      tags: windows
+      ignore_errors: yes
+      register: dns_config
+      changed_when: dns_config.changed
+
+    # Debugging and Reporting
+    - name: Display results
+      debug:
+        msg: |
+          NTP Install Status: {{ ntp_install }}
+          Time Service Status: {{ time_service }}
+          Firewall Rule Status: {{ firewall_rule }}
+          SSH Firewall Status: {{ ssh_firewall }}
+          Password Policy Status: {{ password_policy }}
+          SSH Crypto Status: {{ ssh_crypto }}
+          DNS Config Status: {{ dns_config }}
+      tags: always
