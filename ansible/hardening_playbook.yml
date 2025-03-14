@@ -51,9 +51,9 @@
 
     # Password Complexity Requirements
     - name: Set password policy for Windows hosts
-      win_policy:
-        key: "System\\CurrentControlSet\\Services\\Netlogon\\Parameters"
-        value_name: PasswordComplexity
+      win_regedit:
+        path: HKLM:\System\CurrentControlSet\Services\Netlogon\Parameters
+        name: PasswordComplexity
         data: 1
         type: dword
       tags: windows
