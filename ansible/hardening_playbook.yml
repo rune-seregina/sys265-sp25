@@ -23,21 +23,7 @@
       ignore_errors: yes
       register: time_service
       changed_when: time_service.changed
-    # Service Baseline Configuration
-    - name: Disable unnecessary Linux services
-      ansible.builtin.systemd:
-        name: "{{ item }}"
-        enabled: no
-        state: stopped
-      loop: [ cups, bluetooth ]
-      tags: rocky
 
-    - name: Ensure Windows Remote Registry disabled
-      win_service:
-        name: RemoteRegistry
-        start_mode: disabled
-        state: stopped
-      tags: windows
     # Firewall Baseline Rules
     - name: Configure Windows firewall to block SMB inbound
       win_firewall_rule:
@@ -96,6 +82,24 @@
       register: dns_config
       changed_when: dns_config.changed
 
+    # Backup Configuration
+    - name: Configure Windows backup
+      win_shell: wbadmin enable backup -addtarget:\\MGMT01\backups
+      tags: windows
+      ignore_errors: yes
+      register: windows_backup
+      changed_when: windows_backup.changed
+
+    - name: Setup Linux cron backup
+      ansible.builtin.copy:
+        src: backup_script.sh
+        dest: /usr/local/bin/
+        mode: 0755
+      tags: rocky
+      ignore_errors: yes
+      register: linux_backup
+      changed_when: linux_backup.changed
+
     # Debugging and Reporting
     - name: Display results
       debug:
@@ -107,4 +111,6 @@
           Password Policy Status: {{ password_policy }}
           SSH Crypto Status: {{ ssh_crypto }}
           DNS Config Status: {{ dns_config }}
+          Windows Backup Status: {{ windows_backup }}
+          Linux Backup Status: {{ linux_backup }}
       tags: always
