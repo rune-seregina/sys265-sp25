@@ -23,7 +23,21 @@
       ignore_errors: yes
       register: time_service
       changed_when: time_service.changed
+    # Service Baseline Configuration
+    - name: Disable unnecessary Linux services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: no
+        state: stopped
+      loop: [ cups, bluetooth ]
+      tags: rocky
 
+    - name: Ensure Windows Remote Registry disabled
+      win_service:
+        name: RemoteRegistry
+        start_mode: disabled
+        state: stopped
+      tags: windows
     # Firewall Baseline Rules
     - name: Configure Windows firewall to block SMB inbound
       win_firewall_rule:
