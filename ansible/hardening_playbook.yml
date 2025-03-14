@@ -81,24 +81,19 @@
       ignore_errors: yes
       register: dns_config
       changed_when: dns_config.changed
+    #Disk Management
 
-    # Backup Configuration
-    - name: Configure Windows backup
-      win_shell: wbadmin enable backup -addtarget:\\MGMT01\backups
-      tags: windows
-      ignore_errors: yes
-      register: windows_backup
-      changed_when: windows_backup.changed
-
-    - name: Setup Linux cron backup
-      ansible.builtin.copy:
-        src: backup_script.sh
-        dest: /usr/local/bin/
-        mode: 0755
+    - name: Check disk partitions on Linux
+      ansible.builtin.shell: lsblk -f
+      register: disk_layout
       tags: rocky
       ignore_errors: yes
-      register: linux_backup
-      changed_when: linux_backup.changed
+
+    - name: Verify Windows disk encryption status
+      win_shell: manage-bde -status
+      register: windows_encryption
+      tags: windows
+      ignore_errors: yes
 
     # Debugging and Reporting
     - name: Display results
@@ -113,4 +108,6 @@
           DNS Config Status: {{ dns_config }}
           Windows Backup Status: {{ windows_backup }}
           Linux Backup Status: {{ linux_backup }}
+          Linux Disk Layout: {{ disk_layout }}
+          Windows Encryption Status: {{windows_encryption}}
       tags: always
